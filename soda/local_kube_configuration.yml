@@ -12,3 +12,4 @@ soda_cloud:
   host: cloud.soda.io
   api_key_id: ${{ secret.API_KEY_ID }}
   api_key_secret: ${{ secret.API_KEY_SECRET }}
+  
