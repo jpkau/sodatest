@@ -1,0 +1,86 @@
+# 2 validity metrics
+checks for dim_date:
+  - invalid_count(english_day_name_of_week) = 0:
+      name: Ensure english_day_name_of_week is formatted as a day of the week
+      valid values: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+      attributes:
+        dimension: [validity]      
+  - invalid_count(day_number_of_week) = 0:
+      name: Ensure day_number_of_week is between 1 and 7
+      valid min: 1
+      valid max: 7
+      attributes:
+        dimension: [validity]
+
+# 1 validity metric, 2 failed rows checks, 1 numeric metric, 1 user-defined check
+# 3 suggested checks
+# 1 check using a template
+checks for dim_product:
+  - failed rows:
+      name: Ensure each weight has a unit of measure
+      fail condition: weight is not null and weight_unit_measure_code is null
+  - min(days_to_manufacture) >= 0:
+      name: Ensure days_to_manufacture is not negative
+      attributes:
+        dimension: [validity]      
+  - failed rows:
+      name: Ensure list_price is not less than dealer_price
+      fail condition: list_price < dealer_price
+  - diff_avg_prices > 100:
+      name: Ensure the difference between average list_price and dealer_price > 100
+      diff_avg_prices expression: AVG(list_price::numeric) - AVG(dealer_price::numeric)
+  - invalid_count(safety_stock_level) = 0:
+      name: Ensure safety_stock_level < 500 for the products with list_price > $600
+      valid max: 499
+      filter: list_price > '$600'
+
+  # suggested checks for dim_product
+  # Add a schema check - https://go.soda.io/suggest-schema
+  - schema:
+      name: Any schema changes
+      warn:
+        when schema changes:
+          - column delete
+          - column add
+          - column index change
+          - column type change
+
+  # Add a row count check - https://go.soda.io/suggest-rowcount
+  - row_count > 0
+  - anomaly score for row_count < default
+
+  # Add missing value checks - https://go.soda.io/suggest-missing
+  - missing_count(product_key) = 0
+  - missing_count(weight) = 0
+
+
+
+# 1 validity metric, 2 numeric metrics
+checks for dim_currency:
+  - missing_count(currency_name) = 0:
+      name: Ensure there are no null values in the currency_name column
+  - duplicate_count(currency_alternate_key) = 0:
+      name: Ensure no duplicate currency alternate keys
+  - invalid_count(currency_alternate_key) = 0:
+      name: Ensure currency alternate key has exactly three uppercase characters
+      valid regex: ^[A-Z]{3}$
+
+# 2 reference checks
+checks for fact_sales_quota:
+  - values in (employee_key) must exist in dim_employee (employee_key):
+      name: Ensure employee_key in fact_sales_quota exists in dim_employee
+  - values in (date_key) must exist in dim_date (date_key):
+      name: Ensure date_key in fact_sales_quota exists in dim_date
+
+# 1 (completely insane) cross check. "Same as" is the only comparison supported in this level.
+checks for dim_employee:
+  - row_count same as dim_customer:
+      name: Ensure dim_employee has the same number of rows as dim_customer
+
+# 1 distribution check
+checks for dim_customer:
+  - distribution_difference(marital_status) > 0.05: # p-value threshold
+      name: Ensure marital_status distribution has not changed significantly
+      distribution reference file: ./dist_ref/marital_status_dist_ref.yml
+      method: chi_square
+

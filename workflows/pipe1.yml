@@ -1,0 +1,24 @@
+ # This GitHub Action runs a Soda scan on a Snowflake data source called reporting_api_marts.
+ name: Run Soda Scan on localkube
+ # GitHub triggers this job when a user creates or updates a pull request.
+ on: pull_request
+ jobs:
+ soda_scan:
+   runs-on: ubuntu-latest
+   name: Run Soda Scan
+   steps:
+     - name: Checkout
+       uses: actions/checkout@v3
+
+     - name: Perform Soda Scan
+       uses: sodadata/soda-github-action@main
+       env:
+         SODA_CLOUD_API_KEY: ${{ secrets.API_KEY_ID }}
+         SODA_CLOUD_API_SECRET: ${{ secrets.API_KEY_SECRET }}
+         POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+         POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+       with:
+         soda_library_version: v1.0.4
+         data_source: localkube
+         configuration: .soda/local_kube_configuration.yml
+         checks: ./soda/checks.yml
