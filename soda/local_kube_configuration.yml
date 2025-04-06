@@ -1,0 +1,15 @@
+data_source localkube:
+  type: postgres
+  connection:
+    host: localhost
+    port: 5432
+    username: ${ POSTGRES_USERNAME }
+    password: ${ POSTGRES_PASSWORD }
+    database: postgres
+  schema: public
+
+soda_cloud:
+  host: cloud.soda.io
+  api_key_id: ${ API_KEY_ID }
+  api_key_secret: ${ API_KEY_SECRET }
+  

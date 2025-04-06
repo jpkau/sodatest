@@ -1,0 +1,32 @@
+# This GitHub Action runs a Soda scan on a PostgreSQL data source called localkube.
+name: Run Soda Scan on localkube
+# GitHub triggers this job when a user pushes to Github
+on: [push]
+jobs:
+#  hello-world:
+#    runs-on: [self-hosted, linux]
+#    name: A smoke test for the self-hosted runner
+#    steps:
+#      - name: Print hello
+#        run: echo Hello world!
+
+  soda_scan:
+    runs-on: [self-hosted, linux]
+    name: Run Soda Scan
+    steps:
+      - name: Checkout
+        # this will clone the repo into the runner's workspace
+        uses: actions/checkout@v3
+ 
+      - name: Perform Soda Scan
+        # Here we assume that the Soda CLI is installed in the environment where the runner runs 
+        run: |
+          soda scan \
+            --data-source localkube \
+            --configuration soda/local_kube_configuration.yml \
+            soda/checks.yml
+        env:
+          API_KEY_ID: ${{ secrets.API_KEY_ID }}
+          API_KEY_SECRET: ${{ secrets.API_KEY_SECRET }}
+          POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
